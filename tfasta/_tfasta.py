@@ -1,11 +1,17 @@
 #! /usr/bin/env python
 
 """
-A module that does stuff with fasta files.
+tfasta: reading and writing of fast files
 
-The most useful methods are:
+This is automatically generated documentation and should
+not be relied on for the API. Please
+see the official documentation at http://pythonhosted.org/tfasta/.
+
+The most useful functions are:
 
      - B{L{fasta_parser}}: returns an iterator for a fasta file
+     - B{L{string_fasta_parser}}: returns an iterator for fasta text
+     - B{L{io_fasta_parser}}: returns an iterator for fasta text
      - B{L{make_fasta_from_dict}}: returns a string representation
              of a fasta file given a C{dict} of sequences
              keyed by record name
@@ -22,7 +28,7 @@ See L{tfasta_templates} documentation for supported fasta file types.
 import re
 import sys
 import cStringIO
-from tfasta_templates import TEMPLATES
+from tfasta_templates import FastaTemplate, TEMPLATES
 
 T_DEF = TEMPLATES['default']
 T_SWISS = TEMPLATES['swissprot']
@@ -34,55 +40,40 @@ FASTA_WIDTH = 60
 
 CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-"
 
-
 #######################################################################
-# fasta_parser()
+# io_fasta_parser()
 #######################################################################
-def fasta_parser(filename,template=None,greedy=None,dogaps=False):
+def io_fasta_parser(fastafile, template=None, dogaps=False):
   """
-  Given a I{filename}, returns an iterator that will iterate
-  over the fasta file. It will C{yield} dictionaries keyed according
+  Helper generator function for L{fasta_parser} and
+  L{string_fasta_parser}.
+
+  Given I{fastafile} (C{file}-like object, open for reading),
+  returns an iterator that iterates over the fasta file.
+  It will C{yield} dictionaries keyed according
   to the C{fields} in C{template}. These dictionaries will all also
-  include a sequence keyed by "sequence". Yielding dictionaries
-  allows for flexibility in the types of fasta files parsed.
-
-  File format testing is not done, so make sure its a fasta file.
-
-  @param filename: name of the fasta file
-  @type filename: str
+  include a sequence keyed by "sequence".
+  
+  @param fastafile: C{file}-like object containing fasta text,
+                    opened for reading
   @param template: instance of C{FastaTemplate} class--choose from
                    TEMPLATES or define your own.
   @type template: FastaTemplate
-  @param greedy: a C{bool} specifying whether to read the
-      whole fasta file in at once. Set to C{True} for many smaller
-      files or to C{False} for a few or one REALLY big ones.
-  @type greedy: bool
   @param dogaps: a C{bool} specifying whether to keep "-" in the
                  sequence after parsing the file
                    - if C{False}, then gaps are ignored
                    - handy if processing an alignment
   """
-
   letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
   # set the default template if necessary
   if (template is None):
     template = T_DEF
-  # be safe if greediness is not specified
-  if (greedy is None):
-    greedy = False
+  # gaps
   if dogaps:
     alphabet = letters + "-"
   else:
     alphabet = letters
-  # open the fasta file
-  fastafile = open(filename)
-  # flag to for finding the first record
-  if (greedy):
-    # read the whole file and make a switch, no-one the wiser
-    afile = cStringIO.StringIO(fastafile.read())
-    fastafile.close()
-    fastafile = afile
   # set the flag to tells us if we have found a fasta entry
   found_first = False
   fasta = []
@@ -122,6 +113,77 @@ def fasta_parser(filename,template=None,greedy=None,dogaps=False):
   # clean up
   fastafile.close()
 
+
+#######################################################################
+# fasta_parser()
+#######################################################################
+def fasta_parser(filename,template=None,greedy=None,dogaps=False):
+  """
+  Given a I{filename}, returns an iterator that iterates
+  over the fasta file. It will C{yield} dictionaries keyed according
+  to the C{fields} in C{template}. These dictionaries will all also
+  include a sequence keyed by "sequence". Yielding dictionaries
+  allows for flexibility in the types of fasta files parsed.
+
+  File format testing is not done, so make sure its a fasta file.
+
+  @param filename: name of the fasta file
+  @type filename: str
+  @param template: instance of C{FastaTemplate} class--choose from
+                   TEMPLATES or define your own.
+  @type template: FastaTemplate
+  @param greedy: a C{bool} specifying whether to read the
+      whole fasta file in at once. Set to C{True} for many smaller
+      files or to C{False} for a few or one REALLY big ones.
+  @type greedy: bool
+  @param dogaps: a C{bool} specifying whether to keep "-" in the
+                 sequence after parsing the file
+                   - if C{False}, then gaps are ignored
+                   - handy if processing an alignment
+  """
+  # be safe if greediness is not specified
+  if (greedy is None):
+    greedy = False
+  # open the fasta file
+  fastafile = open(filename)
+  # flag to for finding the first record
+  if (greedy):
+    # read the whole file and make a switch, no-one the wiser
+    afile = cStringIO.StringIO(fastafile.read())
+    fastafile.close()
+    fastafile = afile
+  return io_fasta_parser(fastafile, template, dogaps)
+
+#######################################################################
+# parse_string_fasta()
+#######################################################################
+def string_fasta_parser(astr, template=None, dogaps=False):
+  """
+  Given I{astr} (string of fasta), returns an iterator that iterates
+  over the fasta file. It will C{yield} dictionaries keyed according
+  to the C{fields} in C{template}. These dictionaries will all also
+  include a sequence keyed by "sequence". Yielding dictionaries
+  allows for flexibility in the types of fasta files parsed.
+
+  This function will do its best to remove unneeded whitespace,
+  including line breaks.
+
+  Beyond simple extra whitespace, the `astr` should be properly
+  formatted fasta text.
+
+  @param astr: fasta text
+  @type astr: str
+  @param template: instance of C{FastaTemplate} class--choose from
+                   TEMPLATES or define your own.
+  @type template: FastaTemplate
+  @param dogaps: a C{bool} specifying whether to keep "-" in the
+                 sequence after parsing the file
+                   - if C{False}, then gaps are ignored
+                   - handy if processing an alignment
+  """
+  astr = "\n".join([s.strip() for s in astr.splitlines() if s.strip()])
+  fastafile = cStringIO.StringIO(astr)
+  return io_fasta_parser(fastafile, template, dogaps)
 
 ###################################################################
 # make_fasta_from_dict()
@@ -207,32 +269,4 @@ def test_parser(template, filename):
                          (aline, filename)
   afile.close()
   return True
-   
-
-
-
-
-#######################################################################
-#######################################################################
-##
-##  main
-##
-#######################################################################
-#######################################################################
-if (__name__ == "__main__"):
-
-  try:
-    fastaname = sys.argv[1]
-    fastype = sys.argv[2]
-  except:
-    print "usage: python _tfasta.py filename type"
-    sys.exit(0)
-
-  template = TEMPLATES[fastype]
-
-  test_parser(template, fastaname)
-
-  for entry in fasta_parser(fastaname, template=template, greedy=True):
-    print entry
-
 

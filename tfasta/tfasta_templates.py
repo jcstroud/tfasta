@@ -1,6 +1,11 @@
 """
-The only thing that should be used externally from this module is
-I{TEMPLATES}, a C{dict} of C{FastaTemplate} instances. A dictionary is
+This is automatically generated documentation and should
+not be relied on for the API. Please
+see the official documentation at http://pythonhosted.org/tfasta/.
+
+The only things that should be used externally from this module are
+I{TEMPLATES}, a C{dict} of C{FastaTemplate} instances, or
+C{FastaTemplate} itself. A dictionary is
 used so that templates can be selected dynamically at run-time.
 
 Template types registered in I{TEMPLATES} are:
@@ -62,6 +67,8 @@ class FastaTemplate:
     """
     # self.set_regex(regex)
     # self.set_fields(fields)
+    if isinstance(regex, basestring):
+      regex = re.compile(regex)
     self.regex = regex
     self.fields = fields
 

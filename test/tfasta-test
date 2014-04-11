@@ -13,7 +13,7 @@ from collections import OrderedDict
 
 sys.path.insert(0, "..")
 
-import tfasta
+from tfasta import *
 
 if __name__ == "__main__":
 
@@ -31,7 +31,7 @@ if __name__ == "__main__":
   
   filename = "short-extended.fas"
   print "\n".join(open(filename).read().splitlines()[:10])
-  fasta_iterator = tfasta.fasta_parser(filename)
+  fasta_iterator = fasta_parser(filename)
   f = fasta_iterator.next()
   print f['name']
   print f['sequence'][:60]
@@ -40,9 +40,8 @@ if __name__ == "__main__":
 
   print
 
-  import tfasta
-  fast = tfasta.fasta_parser("cytb.fas",
-                             template=tfasta.T_NR)
+  fast = fasta_parser("cytb.fas",
+                      template=T_NR)
   f = fast.next()
   print f['gi']
   print f['accession']
@@ -58,10 +57,32 @@ if __name__ == "__main__":
         afnaedtrempfhvtkqeskpvqmmcmnnsfnvatlpae
         KMKILELPFASGDLSMLV
         """
-  print tfasta.make_fasta(name, seq, width=50)
+  print make_fasta(name, seq, width=50)
 
 
   print
-  od = OrderedDict({ "First 10": "QIKDLLVSSS",
-                     "Second 10": "tdldttlvlv" })
-  print tfasta.make_fasta_from_dict(od)
+  od = OrderedDict({ "First 10":  " 1 QIKDLLVSSS",
+                     "Second 10": "11 tdldttlvlv" })
+  print make_fasta_from_dict(od)
+
+
+  print
+
+  regex = r'^>gi\|([^|]*)\|[^|]*\|([^|]*)\|.*$'
+  fields = ("gi", "accession")
+  t_nrblast = FastaTemplate(regex, fields)
+  fast = fasta_parser("short-extended.fas", template=t_nrblast)
+  f = fast.next()
+  print f['accession']
+  print f['sequence'][:60]
+
+  print
+  astr = """
+          > Abeta in a string
+          DAEFRHDSGYEVHHQKLVFFAEDVGSNKGAIIGLMVGGVVIA
+          """
+  fast = string_fasta_parser(astr)
+  f = fast.next()
+  print f['name']
+  print f['sequence']
+

@@ -18,3 +18,6 @@ DOCDEST = .
 
 # name of template file for license
 LICENSE_TEMPLATE = LICENSE-BSD.tmplt
+
+# epydoc stylesheet
+EPYSTYLE = /Users/jstroud/Stylesheets/epydoc/epydoc.css

@@ -8,7 +8,7 @@ DOCPDF = $(PACKAGE).pdf
 
 VERMODULE = $(PACKAGE)/_version.py
 
-DOCS = LICENSE.txt html
+DOCS = LICENSE.txt html epy-html
 PRODUCTS = $(VERMODULE) $(DOCS)
 
 all : sdist
@@ -27,6 +27,13 @@ $(VERMODULE) : scrub
 html : $(VERMODULE)
 	cd $(DOCDIR) ; rm -rf _build/html ; make html
 	mv $(DOCDIR)/_build/html $(HTMLDIR)
+
+.PHONY: epy-html
+epy-html: $(VERMODULUE)
+	rm -rf epy-html
+	/usr/local/bin/epydoc -v \
+              --css=${EPYSTYLE} \
+              --output=epy-html ${PACKAGE}
 
 $(DOCZIP) : html
 	-rm -f $(DOCZIP)
@@ -72,4 +79,4 @@ prune :
                             doit=True)")'
 
 scrub : clean prune
-	-rm -rf dist/ build/ $(PACKAGE).egg-info/
+	-rm -rf dist/ build/ $(PACKAGE).egg-info/ README.html
