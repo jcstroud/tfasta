@@ -80,7 +80,7 @@ with a single command::
 For example::
 
     >>> from tfasta import fasta_parser
-    >>> fast = tfasta.fasta_parser("short-extended.fas")
+    >>> fast = fasta_parser("short-extended.fas")
     >>> f = fast.next()
     >>> print f['name']
     gi|32033604|ref|ZP_00133915.1|
